@@ -27,12 +27,12 @@ const packages = [
     entry: "../packages/deck.gl-raster/src/index.ts",
     readme: "../packages/deck.gl-raster/README.md",
   },
-  {
-    id: "deck-gl-zarr",
-    label: "deck.gl-zarr",
-    entry: "../packages/deck.gl-zarr/src/index.ts",
-    readme: "../packages/deck.gl-zarr/README.md",
-  },
+  // {
+  //   id: "deck-gl-zarr",
+  //   label: "deck.gl-zarr",
+  //   entry: "../packages/deck.gl-zarr/src/index.ts",
+  //   readme: "../packages/deck.gl-zarr/README.md",
+  // },
   {
     id: "epsg",
     label: "epsg",
@@ -59,6 +59,81 @@ const packages = [
   },
 ];
 
+const BASE = "/deck.gl-raster";
+const BASE_AFFINE = `${BASE}/api/affine`;
+const BASE_DECK_GL = "https://deck.gl/docs/api-reference";
+const BASE_DECK_GL_GEOTIFF = `${BASE}/api/deck-gl-geotiff`;
+const BASE_DECK_GL_RASTER = `${BASE}/api/deck-gl-raster`;
+const BASE_GEOTIFF = `${BASE}/api/geotiff`;
+const BASE_MORECANTILE = `${BASE}/api/morecantile`;
+const BASE_RASTER_REPROJECT = `${BASE}/api/raster-reproject`;
+const BASE_LUMA_GL = "https://luma.gl/docs/api-reference";
+
+/**
+ * Cross-package symbol link mappings for TypeDoc's externalSymbolLinkMappings.
+ * Keys are npm package names; values map symbol names to their doc URLs.
+ * The "*" wildcard is a fallback for any symbol not explicitly listed.
+ */
+const crossPackageLinks: Record<string, Record<string, string>> = {
+  "@developmentseed/affine": {
+    Affine: `${BASE_AFFINE}/type-aliases/Affine/`,
+    "*": `${BASE_AFFINE}/`,
+  },
+  "@developmentseed/deck.gl-geotiff": {
+    COGLayer: `${BASE_DECK_GL_GEOTIFF}/classes/COGLayer/`,
+    "*": `${BASE_DECK_GL_GEOTIFF}/`,
+  },
+  "@developmentseed/deck.gl-raster": {
+    RasterLayer: `${BASE_DECK_GL_RASTER}/classes/RasterLayer/`,
+    "*": `${BASE_DECK_GL_RASTER}/`,
+  },
+  "@developmentseed/geotiff": {
+    GeoTIFF: `${BASE_GEOTIFF}/classes/GeoTIFF/`,
+    Overview: `${BASE_GEOTIFF}/classes/Overview/`,
+    DecoderPool: `${BASE_GEOTIFF}/classes/DecoderPool/`,
+    RasterArray: `${BASE_GEOTIFF}/type-aliases/RasterArray/`,
+    RasterTypedArray: `${BASE_GEOTIFF}/type-aliases/RasterTypedArray/`,
+    Tile: `${BASE_GEOTIFF}/type-aliases/Tile/`,
+    Decoder: `${BASE_GEOTIFF}/type-aliases/Decoder/`,
+    DecoderMetadata: `${BASE_GEOTIFF}/type-aliases/DecoderMetadata/`,
+    DecoderPoolOptions: `${BASE_GEOTIFF}/type-aliases/DecoderPoolOptions/`,
+    ProjJson: `${BASE_GEOTIFF}/type-aliases/ProjJson/`,
+    parseColormap: `${BASE_GEOTIFF}/functions/parseColormap/`,
+    "*": `${BASE_GEOTIFF}/`,
+  },
+  "@developmentseed/morecantile": {
+    TileMatrixSet: `${BASE_MORECANTILE}/interfaces/TileMatrixSet/`,
+    TileMatrix: `${BASE_MORECANTILE}/interfaces/TileMatrix/`,
+    BoundingBox: `${BASE_MORECANTILE}/interfaces/BoundingBox/`,
+    CRS: `${BASE_MORECANTILE}/type-aliases/CRS/`,
+    "*": `${BASE_MORECANTILE}/`,
+  },
+  "@developmentseed/raster-reproject": {
+    RasterReprojector: `${BASE_RASTER_REPROJECT}/classes/RasterReprojector/`,
+    ReprojectionFns: `${BASE_RASTER_REPROJECT}/interfaces/ReprojectionFns/`,
+    "*": `${BASE_RASTER_REPROJECT}/`,
+  },
+  "deck.gl": {
+    Layer: `${BASE_DECK_GL}/core/layer/`,
+    SimpleMeshLayer: `${BASE_DECK_GL}/mesh-layers/simple-mesh-layer/`,
+    TileLayer: `${BASE_DECK_GL}/geo-layers/tile-layer/`,
+  },
+  "@deck.gl/core": {
+    Layer: `${BASE_DECK_GL}/core/layer/`,
+  },
+  "@deck.gl/mesh-layers": {
+    SimpleMeshLayer: `${BASE_DECK_GL}/mesh-layers/simple-mesh-layer/`,
+  },
+  "@deck.gl/geo-layers": {
+    TileLayer: `${BASE_DECK_GL}/geo-layers/tile-layer/`,
+  },
+  "@luma.gl/core": {
+    Device: `${BASE_LUMA_GL}/core/device/`,
+    RenderPipeline: `${BASE_LUMA_GL}/core/resources/render-pipeline/`,
+    Texture: `${BASE_LUMA_GL}/core/resources/texture/`,
+  },
+};
+
 // One docusaurus-plugin-typedoc per package.
 // These generate markdown into docs/api/<id>/ when `generate-typedoc` is run.
 const typedocPlugins = packages.map((pkg) => [
@@ -73,6 +148,8 @@ const typedocPlugins = packages.map((pkg) => [
     excludeInternal: true,
     readme: pkg.readme,
     mergeReadme: true,
+    plugin: ["typedoc-plugin-mdn-links"],
+    externalSymbolLinkMappings: crossPackageLinks,
   },
 ]);
 
