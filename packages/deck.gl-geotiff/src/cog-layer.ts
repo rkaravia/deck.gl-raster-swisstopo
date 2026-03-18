@@ -4,7 +4,7 @@ import type {
   LayersList,
   UpdateParameters,
 } from "@deck.gl/core";
-import { CompositeLayer } from "@deck.gl/core";
+import { COORDINATE_SYSTEM, CompositeLayer } from "@deck.gl/core";
 import type {
   _Tile2DHeader as Tile2DHeader,
   TileLayerProps,
@@ -13,7 +13,10 @@ import type {
 } from "@deck.gl/geo-layers";
 import { TileLayer } from "@deck.gl/geo-layers";
 import { PathLayer } from "@deck.gl/layers";
-import type { RasterModule } from "@developmentseed/deck.gl-raster";
+import type {
+  RasterLayerProps,
+  RasterModule,
+} from "@developmentseed/deck.gl-raster";
 import {
   RasterLayer,
   TileMatrixSetTileset,
@@ -36,6 +39,25 @@ import { inferRenderPipeline } from "./geotiff/render-pipeline.js";
 import { fromAffine } from "./geotiff-reprojection.js";
 import type { EpsgResolver } from "./proj.js";
 import { epsgResolver } from "./proj.js";
+
+/** Size of deck.gl's common coordinate space in world units.
+ *
+ * At zoom 0, one tile covers the whole world (512×512 units); at zoom z, each
+ * tile is 512/2^z units.
+ */
+const TILE_SIZE = 512;
+
+/**
+ * The size of the globe in web mercator meters.
+ */
+const WEB_MERCATOR_METER_CIRCUMFERENCE = 40075016.686;
+
+/**
+ * Scale factor for converting EPSG:3857 meters into deck.gl world units
+ * (512×512).
+ */
+const WEB_MERCATOR_TO_WORLD_SCALE =
+  TILE_SIZE / WEB_MERCATOR_METER_CIRCUMFERENCE;
 
 /**
  * Minimum interface that **must** be returned from getTileData.
@@ -213,6 +235,7 @@ export class COGLayer<
     forwardTo4326?: ReprojectionFns["forwardReproject"];
     inverseFrom4326?: ReprojectionFns["inverseReproject"];
     forwardTo3857?: ReprojectionFns["forwardReproject"];
+    inverseFrom3857?: ReprojectionFns["inverseReproject"];
     tms?: TileMatrixSet;
     defaultGetTileData?: COGLayerProps<TextureDataT>["getTileData"];
     defaultRenderTile?: COGLayerProps<TextureDataT>["renderTile"];
@@ -245,6 +268,7 @@ export class COGLayer<
       forwardTo4326: undefined,
       inverseFrom4326: undefined,
       forwardTo3857: undefined,
+      inverseFrom3857: undefined,
       defaultGetTileData: undefined,
       defaultRenderTile: undefined,
     });
@@ -273,6 +297,8 @@ export class COGLayer<
     const converter3857 = proj4(sourceProjection, "EPSG:3857");
     const forwardTo3857 = (x: number, y: number) =>
       converter3857.forward<[number, number]>([x, y], false);
+    const inverseFrom3857 = (x: number, y: number) =>
+      converter3857.inverse<[number, number]>([x, y], false);
 
     if (this.props.onGeoTIFFLoad) {
       const geographicBounds = getGeographicBounds(geotiff, converter4326);
@@ -296,6 +322,7 @@ export class COGLayer<
       forwardTo4326,
       inverseFrom4326,
       forwardTo3857,
+      inverseFrom3857,
     });
   }
 
@@ -373,6 +400,8 @@ export class COGLayer<
     tms: TileMatrixSet,
     forwardTo4326: ReprojectionFns["forwardReproject"],
     inverseFrom4326: ReprojectionFns["inverseReproject"],
+    forwardTo3857: ReprojectionFns["forwardReproject"],
+    inverseFrom3857: ReprojectionFns["inverseReproject"],
   ): Layer | LayersList | null {
     const { maxError, debug, debugOpacity } = this.props;
     const { tile } = props;
@@ -402,6 +431,49 @@ export class COGLayer<
         );
       }
 
+      // viewport.resolution is defined for GlobeView, undefined for WebMercatorViewport.
+      // For WebMercator we project the mesh to EPSG:3857 and use a model matrix
+      // to map from 3857 meters to deck.gl world space, matching the approach
+      // used by the MVTLayer. This avoids per-vertex WGS84→WebMercator linear
+      // interpolation errors that become visible at high latitudes.
+      const isGlobe = this.context.viewport.resolution !== undefined;
+      let reprojectionFns: ReprojectionFns;
+      let rasterLayerProps: Partial<RasterLayerProps>;
+
+      if (isGlobe) {
+        reprojectionFns = {
+          forwardTransform,
+          inverseTransform,
+          forwardReproject: forwardTo4326,
+          inverseReproject: inverseFrom4326,
+        };
+        rasterLayerProps = {};
+      } else {
+        reprojectionFns = {
+          forwardTransform,
+          inverseTransform,
+          forwardReproject: forwardTo3857,
+          inverseReproject: inverseFrom3857,
+        };
+        // Scale 3857 meters → deck.gl world units (512×512).
+        //
+        // coordinateOrigin shifts the world-space origin to (256, 256) so that
+        // easting=0 / northing=0 maps to world center. Then the modelMatrix
+        //
+        // No Y-flip needed: CARTESIAN Y increases upward = northing.
+        rasterLayerProps = {
+          coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+          coordinateOrigin: [TILE_SIZE / 2, TILE_SIZE / 2, 0],
+          // biome-ignore format: array
+          modelMatrix: [
+            WEB_MERCATOR_TO_WORLD_SCALE, 0, 0, 0,
+            0, WEB_MERCATOR_TO_WORLD_SCALE, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+          ],
+        };
+      }
+
       layers.push(
         new RasterLayer(
           this.getSubLayerProps({
@@ -410,14 +482,10 @@ export class COGLayer<
             height,
             renderPipeline,
             maxError,
-            reprojectionFns: {
-              forwardTransform,
-              inverseTransform,
-              forwardReproject: forwardTo4326,
-              inverseReproject: inverseFrom4326,
-            },
+            reprojectionFns,
             debug,
             debugOpacity,
+            ...rasterLayerProps,
           }),
         ),
       );
@@ -477,6 +545,7 @@ export class COGLayer<
     forwardTo4326: ReprojectionFns["forwardReproject"],
     inverseFrom4326: ReprojectionFns["inverseReproject"],
     forwardTo3857: ReprojectionFns["forwardReproject"],
+    inverseFrom3857: ReprojectionFns["inverseReproject"],
     geotiff: GeoTIFF,
   ): TileLayer {
     // Create a factory class that wraps COGTileset2D with the metadata
@@ -497,7 +566,14 @@ export class COGLayer<
       TilesetClass: TileMatrixSetTilesetFactory,
       getTileData: async (tile) => this._getTileData(tile, geotiff, tms),
       renderSubLayers: (props) =>
-        this._renderSubLayers(props, tms, forwardTo4326, inverseFrom4326),
+        this._renderSubLayers(
+          props,
+          tms,
+          forwardTo4326,
+          inverseFrom4326,
+          forwardTo3857,
+          inverseFrom3857,
+        ),
       maxRequests,
       maxCacheSize,
       maxCacheByteSize,
@@ -506,13 +582,20 @@ export class COGLayer<
   }
 
   renderLayers() {
-    const { forwardTo4326, inverseFrom4326, forwardTo3857, tms, geotiff } =
-      this.state;
+    const {
+      forwardTo4326,
+      inverseFrom4326,
+      forwardTo3857,
+      inverseFrom3857,
+      tms,
+      geotiff,
+    } = this.state;
 
     if (
       !forwardTo4326 ||
       !inverseFrom4326 ||
       !forwardTo3857 ||
+      !inverseFrom3857 ||
       !tms ||
       !geotiff
     ) {
@@ -527,6 +610,7 @@ export class COGLayer<
       forwardTo4326,
       inverseFrom4326,
       forwardTo3857,
+      inverseFrom3857,
       geotiff,
     );
   }
