@@ -34,9 +34,9 @@ export function addAlphaChannel(rgbImage: RasterArray): RasterArray {
       : new Uint8ClampedArray(rgbaLength);
     const maxAlpha = isUint16 ? 65535 : 255;
     for (let i = 0; i < rgbImage.data.length / 3; ++i) {
-      rgbaArray[i * 4] = rgbImage.data[i * 3]!;
-      rgbaArray[i * 4 + 1] = rgbImage.data[i * 3 + 1]!;
-      rgbaArray[i * 4 + 2] = rgbImage.data[i * 3 + 2]!;
+      rgbaArray[i * 4] = 255 // rgbImage.data[i * 3]!;
+      rgbaArray[i * 4 + 1] = 255 // rgbImage.data[i * 3 + 1]!;
+      rgbaArray[i * 4 + 2] = 255 // rgbImage.data[i * 3 + 2]!;
       rgbaArray[i * 4 + 3] = maxAlpha;
     }
 

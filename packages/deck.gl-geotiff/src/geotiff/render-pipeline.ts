@@ -7,7 +7,7 @@ import {
   Colormap,
   CreateTexture,
   cieLabToRGB,
-  rgbToRGB,
+  // rgbToRGB,
   FilterNoDataVal,
   MaskTexture,
   WhiteIsZero,
@@ -259,9 +259,7 @@ function photometricInterpretationToRGB({
       };
     }
     case Photometric.Rgb:
-      return {
-        module: rgbToRGB
-      }
+      return null;
     case Photometric.Palette: {
       if (!colorMap) {
         throw new Error(
