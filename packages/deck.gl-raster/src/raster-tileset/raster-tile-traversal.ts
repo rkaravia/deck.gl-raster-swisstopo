@@ -291,7 +291,7 @@ export class RasterTileNode {
       const tileMetersPerPixel = this.level.metersPerPixel;
 
       if (
-        tileMetersPerPixel <= metersPerScreenPixel ||
+        tileMetersPerPixel <= metersPerScreenPixel / 2 ||
         this.z >= maxZ ||
         (children === null && this.z >= minZ)
       ) {
