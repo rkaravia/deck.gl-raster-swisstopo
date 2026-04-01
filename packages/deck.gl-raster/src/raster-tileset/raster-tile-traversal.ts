@@ -340,7 +340,7 @@ export class RasterTileNode {
       // );
 
       if (
-        tileMetersPerPixel <= metersPerScreenPixel ||
+        tileMetersPerPixel <= metersPerScreenPixel / 2 ||
         this.z >= maxZ ||
         (children === null && this.z >= minZ)
       ) {
