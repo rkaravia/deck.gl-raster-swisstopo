@@ -4,6 +4,7 @@ export {
   cieLabToRGB,
   WhiteIsZero,
   YCbCrToRGB,
+  rgbToRGB,
 } from "./color";
 export { Colormap } from "./colormap";
 export { CreateTexture } from "./create-texture";

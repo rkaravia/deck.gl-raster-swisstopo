@@ -3,3 +3,4 @@ export { cieLabToRGB } from "./cielab";
 export { CMYKToRGB } from "./cmyk";
 export { WhiteIsZero } from "./white-is-zero";
 export { YCbCrToRGB } from "./ycbcr";
+export { rgbToRGB } from "./rgb";
