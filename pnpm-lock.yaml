@@ -171,6 +171,9 @@ importers:
       '@developmentseed/epsg':
         specifier: workspace:^
         version: link:../../packages/epsg
+      '@developmentseed/proj':
+        specifier: workspace:^
+        version: link:../../packages/proj
       '@luma.gl/core':
         specifier: ^9.2.6
         version: 9.2.6
@@ -186,9 +189,6 @@ importers:
       react-map-gl:
         specifier: ^8.1.0
         version: 8.1.0(maplibre-gl@5.19.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      wkt-parser:
-        specifier: ^1.5.3
-        version: 1.5.3
     devDependencies:
       '@types/react':
         specifier: ^19.2.14
@@ -311,6 +311,9 @@ importers:
       '@developmentseed/morecantile':
         specifier: workspace:^
         version: link:../morecantile
+      '@developmentseed/proj':
+        specifier: workspace:^
+        version: link:../proj
       '@developmentseed/raster-reproject':
         specifier: workspace:^
         version: link:../raster-reproject
@@ -323,9 +326,6 @@ importers:
       proj4:
         specifier: ^2.20.4
         version: 2.20.4
-      wkt-parser:
-        specifier: ^1.5.3
-        version: 1.5.3
     devDependencies:
       '@types/node':
         specifier: ^25.3.3
@@ -522,9 +522,6 @@ importers:
       vitest:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@25.3.3)(happy-dom@20.0.11)(jiti@1.21.7)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      wkt-parser:
-        specifier: ^1.5.3
-        version: 1.5.3
 
   packages/geozarr:
     dependencies:
@@ -577,10 +574,17 @@ importers:
         version: 4.0.18(@types/node@25.3.3)(happy-dom@20.0.11)(jiti@1.21.7)(jsdom@28.1.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/proj:
+    dependencies:
+      wkt-parser:
+        specifier: 1.5.5
+        version: 1.5.5
     devDependencies:
       '@types/node':
         specifier: ^25.3.3
         version: 25.3.3
+      proj4:
+        specifier: ^2.20.4
+        version: 2.20.4
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -7679,6 +7683,9 @@ packages:
 
   wkt-parser@1.5.3:
     resolution: {integrity: sha512-myla+RrMj+WTlnHc8Y4HEwjBcBF9dqJ3vjff/zmlrn9V3OKOM1mZVIyNjlPEmOM9Jjr/PPut0tnaTs9NyHcK8Q==}
+
+  wkt-parser@1.5.5:
+    resolution: {integrity: sha512-/zMYi94/7D7fxcOSlVmWn6vnOMj3Gq5d1xvVjaYOS9n6h0qOJ4I7YYVxBWYcH1vq9+suhqzXkn05Yx47zQNUIA==}
 
   wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
@@ -15144,7 +15151,7 @@ snapshots:
   proj4@2.20.4:
     dependencies:
       mgrs: 1.0.0
-      wkt-parser: 1.5.3
+      wkt-parser: 1.5.5
 
   prompts@2.4.2:
     dependencies:
@@ -16601,6 +16608,8 @@ snapshots:
   wildcard@2.0.1: {}
 
   wkt-parser@1.5.3: {}
+
+  wkt-parser@1.5.5: {}
 
   wrap-ansi@7.0.0:
     dependencies:
