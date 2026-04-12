@@ -45,7 +45,6 @@ export default function App() {
         },
       );
     },
-    beforeId: "boundary_country_outline",
   });
 
   return (
@@ -59,7 +58,6 @@ export default function App() {
           pitch: 0,
           bearing: 0,
         }}
-        mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
       >
         <DeckGLOverlay layers={[cog_layer]} interleaved />
       </MaplibreMap>
