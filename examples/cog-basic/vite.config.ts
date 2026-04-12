@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
+  base: "",
   worker: { format: "es" },
   server: {
     port: 3000,

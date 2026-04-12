@@ -122,13 +122,40 @@ export default function App() {
             padding: "16px",
             borderRadius: "8px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            maxWidth: "300px",
+            width: "300px",
             pointerEvents: "auto",
           }}
         >
           <h3 style={{ margin: "0 0 8px 0", fontSize: "16px" }}>
-            COGLayer Example
+            Deck.gl-raster Swisstopo example
           </h3>
+          <p
+            style={{
+              fontSize: "12px",
+            }}
+          >
+            This example shows the{" "}
+            <a href="https://data.geo.admin.ch/browser/index.html#/collections/ch.swisstopo.pixelkarte-farbe-pk1000.noscale/items/swiss-map-raster1000_1000?.asset=asset-swiss-map-raster1000_1000_krel_50_2056-tif">
+              Swisstopo National Map 1:1 million
+            </a>{" "}
+            rendered from a Cloud-Optimized GeoTIFF image, using{" "}
+            <a href="https://github.com/developmentseed/deck.gl-raster">
+              deck.gl-raster
+            </a>
+            , which means that it is reprojected from the Swiss projected
+            coordinate system LV95 to Web Mercator in the browser. After
+            applying various tweaks, the result looks very similar to
+            Swisstopo's pre-rendered Web Mercator tiles of the same data. This
+            can be verified using the toggle below. You can find the{" "}
+            <a href="https://github.com/rkaravia/deck.gl-raster-swisstopo">
+              source code on GitHub
+            </a>{" "}
+            and some more information in{" "}
+            <a href="https://karavia.ch/2026/04/17/deck.gl-raster">
+              this blog post
+            </a>
+            .
+          </p>
           <select
             value={selectedIndex}
             onChange={(e) => setSelectedIndex(Number(e.target.value))}
