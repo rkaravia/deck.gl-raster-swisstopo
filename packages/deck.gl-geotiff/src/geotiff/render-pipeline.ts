@@ -182,11 +182,7 @@ function createUnormPipeline(
       format: textureFormat,
       width,
       height,
-      // Use nearest filtering for the mask to avoid interpolated edges/halos
-      sampler: {
-        minFilter: "nearest",
-        magFilter: "nearest",
-      },
+      sampler: samplerOptions,
     });
 
     let maskTexture: Texture | undefined;
