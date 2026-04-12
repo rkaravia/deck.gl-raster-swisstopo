@@ -2,10 +2,16 @@ import type { MapboxOverlayProps } from "@deck.gl/mapbox";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { COGLayer } from "@developmentseed/deck.gl-geotiff";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactNode } from "react";
 import { useRef, useState } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
-import { Map as MaplibreMap, useControl } from "react-map-gl/maplibre";
+import {
+  Layer,
+  Map as MaplibreMap,
+  Source,
+  useControl,
+} from "react-map-gl/maplibre";
 
 function DeckGLOverlay(props: MapboxOverlayProps) {
   const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay(props));
@@ -13,10 +19,21 @@ function DeckGLOverlay(props: MapboxOverlayProps) {
   return null;
 }
 
+function SwisstopoAttribution() {
+  return (
+    <>
+      &copy; <a href="https://www.swisstopo.ch/">Swisstopo</a>
+    </>
+  );
+}
+
+const SWISSTOPO_TILES_LAYER = "swisstopo-pk1000-tiles-layer";
+
 const COG_OPTIONS: { title: string; url: string; attribution?: ReactNode }[] = [
   {
     title: "Swisstopo National Map 1:1 million",
     url: "https://data.geo.admin.ch/ch.swisstopo.pixelkarte-farbe-pk1000.noscale/swiss-map-raster1000_1000/swiss-map-raster1000_1000_krel_50_2056.tif",
+    attribution: <SwisstopoAttribution />,
   },
 ];
 
@@ -25,6 +42,8 @@ export default function App() {
   const [debug, setDebug] = useState(false);
   const [debugOpacity, setDebugOpacity] = useState(0.25);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [showSwisstopoTiles, setShowSwisstopoTiles] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   const cog_layer = new COGLayer({
     id: "cog-layer",
@@ -45,12 +64,14 @@ export default function App() {
         },
       );
     },
+    beforeId: SWISSTOPO_TILES_LAYER,
   });
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <MaplibreMap
         ref={mapRef}
+        onLoad={() => setMapReady(true)}
         initialViewState={{
           longitude: 0,
           latitude: 0,
@@ -59,7 +80,25 @@ export default function App() {
           bearing: 0,
         }}
       >
-        <DeckGLOverlay layers={[cog_layer]} interleaved />
+        <Source
+          id="swisstopo-pk1000-tiles"
+          type="raster"
+          tiles={[
+            "https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe-pk1000.noscale/default/current/3857/{z}/{x}/{y}.jpeg",
+          ]}
+          tileSize={256}
+          bounds={[5.140242, 45.398181, 11.47757, 48.230651]}
+          attribution={renderToStaticMarkup(<SwisstopoAttribution />)}
+        >
+          <Layer
+            id={SWISSTOPO_TILES_LAYER}
+            type="raster"
+            layout={{
+              visibility: showSwisstopoTiles ? "visible" : "none",
+            }}
+          />
+        </Source>
+        {mapReady && <DeckGLOverlay layers={[cog_layer]} interleaved />}
       </MaplibreMap>
 
       {/* UI Overlay Container */}
@@ -146,7 +185,7 @@ export default function App() {
                 onChange={(e) => setDebug(e.target.checked)}
                 style={{ cursor: "pointer" }}
               />
-              <span>Show Debug Mesh</span>
+              <span>Overlay Debug Mesh</span>
             </label>
 
             {debug && (
@@ -174,6 +213,25 @@ export default function App() {
                 </label>
               </div>
             )}
+
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "14px",
+                cursor: "pointer",
+                marginBottom: "12px",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={showSwisstopoTiles}
+                onChange={(e) => setShowSwisstopoTiles(e.target.checked)}
+                style={{ cursor: "pointer" }}
+              />
+              <span>Overlay Swisstopo tiles</span>
+            </label>
           </div>
         </div>
       </div>
